@@ -3,7 +3,6 @@ import cors from "cors";
 import fs from "fs";
 import { ContractAuto } from "./controllers/contractController.js";
 
-
 const app = express();
 
 app.use(cors({
@@ -14,14 +13,21 @@ app.use(express.json());
 
 app.post("/api/contract", async (req, res) => {
   try {
-    const contract = new ContractAuto(req.body);
+    const { seller, buyer, contractSubject, contractDetails } = req.body;
+
+    const contract = new ContractAuto({
+      ...seller,
+      ...buyer,
+      ...contractSubject,
+      ...contractDetails
+    });
     const outputPath = await contract.generate();
 
     if (!fs.existsSync(outputPath)) {
       return res.status(404).json({ error: "PDF not found after generation." });
     }
 
-    res.download(outputPath, "Contract vanzare-cumparare.pdf", (err) => {
+    res.download(outputPath, "contract_auto_final_template.pdf", (err) => {
       if (err) {
         console.error("Error during download:", err);
         if (!res.headersSent) {
@@ -39,10 +45,6 @@ app.post("/api/contract", async (req, res) => {
   }
 
 });
-
-
-
-
 
 app.listen(process.env.PORT || 3001, () => {
   console.log(`Server is running on ${process.env.PORT || 3001}`);
